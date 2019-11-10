@@ -6,12 +6,13 @@ import {
 } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import { Control, LocalForm, Errors } from 'react-redux-form';
+import { Loading } from './LoadingComponent';
 
 const required = (val) => val && val.length;
 const maxLength = (len) => (val) => !(val) || (val.length <= len);
 const minLength = (len) => (val) => val && (val.length >= len);
 
-function RenderComments({ comments, dishId }) {
+function RenderComments({ comments, dishId, addComment }) {
     if (comments.length > 0) {
         let commentList = comments.map((comment) => {
             return (
@@ -30,7 +31,7 @@ function RenderComments({ comments, dishId }) {
                 <ul className="list-unstyled">
                     {commentList}
                 </ul>
-                <CommentForm dishId={dishId} />
+                <CommentForm dishId={dishId} addComment={addComment}/>
             </React.Fragment>
         );
     }
@@ -56,7 +57,27 @@ function RenderDish({ dish }) {
 
 
 const DishDetail = (props) => {
-    if (props.dish != null) {
+    if(props.isLoading){
+        return(
+            <div className="container">
+                <div className="row">
+                    <Loading/>
+                </div>
+            </div>
+        )
+    }
+
+    else if(props.errMess){
+        return(
+            <div className="container">
+                <div className="row">
+                    <h4>{props.errMess}</h4>
+                </div>
+            </div>
+        )
+    }
+
+    else if (props.dish != null) {
         return (
             <div className="container">
                 <div className="row">
@@ -74,7 +95,9 @@ const DishDetail = (props) => {
                         <RenderDish dish={props.dish} />
                     </div>
                     <div className="col-12 col-md-5 m-1">
-                        <RenderComments comments={props.comments} dishId={props.dish.id} />
+                        <RenderComments comments={props.comments} 
+                        dishId={props.dish.id}
+                        addComment={props.addComment} />
                     </div>
                 </div>
             </div>
@@ -105,6 +128,11 @@ class CommentForm extends Component {
         this.setState({
             isModalOpen: !this.state.isModalOpen
         });
+    }
+
+    handleSubmit(values){
+        this.toggleModal();
+        this.props.addComment(this.props.dishId, values.rating, values.author, values.comment);
     }
 
     render() {
